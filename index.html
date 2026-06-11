@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>⭐ 9H 16Min Countdown Timer V.30 - Mukesh Kumar || ADSL ⭐</title>
+
+<style>
+body {
+    font-family: Segoe UI, Tahoma;
+    background: #0f172a;
+    color: #e2e8f0;
+    padding: 20px;
+}
+body.light { background: #f8fafc; color: #000; }
+
+.box {
+    background: #1e293b;
+    padding: 20px;
+    border-radius: 12px;
+}
+body.light .box { background: white; }
+
+.title {
+    font-size: 28px;
+    font-weight: bold;
+    color: #60a5fa;
+}
+body.light .title { color: #003366; }
+
+.timer {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#clock {
+    font-size: 22px;
+    margin-bottom: 10px;
+    color: #93c5fd;
+}
+
+.progress {
+    width: 100%;
+    height: 20px;
+    background: #334155;
+    border-radius: 5px;
+    margin-top: 15px;
+}
+.bar {
+    height: 100%;
+    width: 0%;
+    background: #22c55e;
+    border-radius: 5px;
+}
+</style>
+
+<script>
+let TargetHours = 9;
+let TargetMinutes = 16;
+
+let startTime, targetTime;
+let timerID, clockID;
+let isPaused = false;
+let totalDuration = 0;
+
+function pad2(v) {
+    return v.toString().padStart(2, "0");
+}
+
+function startTimer() {
+    let t = document.getElementById("starttime").value;
+
+    if (!t || !t.includes(":")) {
+        alert("Enter time in HH:MM");
+        return;
+    }
+
+    let [h, m] = t.split(":").map(Number);
+
+    let now = new Date();
+    startTime = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate(),
+        h, m, 0
+    );
+
+    if (startTime > now) {
+        startTime.setDate(startTime.getDate() - 1);
+    }
+
+    targetTime = new Date(startTime);
+    targetTime.setHours(targetTime.getHours() + TargetHours);
+    targetTime.setMinutes(targetTime.getMinutes() + TargetMinutes);
+
+    document.getElementById("login").innerText = t;
+    document.getElementById("logout").innerText =
+        targetTime.toLocaleTimeString();
+
+    totalDuration = (targetTime - startTime) / 1000;
+
+    clearInterval(timerID);
+    timerID = setInterval(updateTimer, 1000);
+
+    clearInterval(clockID);
+    clockID = setInterval(updateClock, 1000);
+
+    isPaused = false;
+
+    btnStart.disabled = true;
+    btnPause.disabled = false;
+    btnResume.disabled = true;
+    btnExport.disabled = true;
+}
+
+function updateTimer() {
+    if (isPaused) return;
+
+    let now = new Date();
+    let remaining = (targetTime - now) / 1000;
+
+    if (remaining <= 0) {
+        document.getElementById("remaining").innerHTML =
+            "<span style='color:#f87171;'>COUNTDOWN COMPLETED</span>";
+
+        document.getElementById("progressbar").style.width = "100%";
+
+        clearInterval(timerID);
+        alert("9 Hours 16 Minutes Completed");
+
+        speak("Countdown completed");
+
+        btnExport.disabled = false;
+        btnStart.disabled = false;
+        return;
+    }
+
+    let h = Math.floor(remaining / 3600);
+    let m = Math.floor((remaining % 3600) / 60);
+    let s = Math.floor(remaining % 60);
+
+    document.getElementById("remaining").innerText =
+        `${h} Hours ${pad2(m)} Minutes ${pad2(s)} Seconds`;
+
+    let elapsed = totalDuration - remaining;
+    let percent = (elapsed / totalDuration) * 100;
+
+    document.getElementById("progressbar").style.width =
+        percent.toFixed(0) + "%";
+}
+
+function updateClock() {
+    document.getElementById("clock").innerText =
+        "Current Time: " + new Date().toLocaleTimeString();
+}
+
+function pauseTimer() {
+    isPaused = true;
+    btnPause.disabled = true;
+    btnResume.disabled = false;
+}
+
+function resumeTimer() {
+    isPaused = false;
+    btnPause.disabled = false;
+    btnResume.disabled = true;
+}
+
+function fillCurrentTime() {
+    let now = new Date();
+    document.getElementById("starttime").value =
+        pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+}
+
+function toggleTheme() {
+    document.body.classList.toggle("light");
+}
+
+function speak(text) {
+    let msg = new SpeechSynthesisUtterance(text);
+    speechSynthesis.speak(msg);
+}
+
+function exportLog() {
+    let log =
+        "Login Time: " + document.getElementById("login").innerText + "\n" +
+        "Logout Time: " + document.getElementById("logout").innerText + "\n" +
+        "Exported At: " + new Date();
+
+    let blob = new Blob([log], { type: "text/plain" });
+    let a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "Mukesh_Timer_Log.txt";
+    a.click();
+}
+</script>
+
+</head>
+
+<body>
+
+<div class="box">
+<div class="title">⭐ 9H 16Min Countdown Timer V.30 - Mukesh Kumar || ADSL ⭐</div><br>
+
+<div id="clock">Current Time: --</div>
+
+<b>Enter Login Time (HH:MM):</b>
+<input type="text" id="starttime">
+<button onclick="fillCurrentTime()">Fill Current Time</button>
+
+<br><br>
+
+<button id="btnStart" onclick="startTimer()">Start</button>
+<button id="btnPause" onclick="pauseTimer()" disabled>Pause</button>
+<button id="btnResume" onclick="resumeTimer()" disabled>Resume</button>
+<button id="btnExport" onclick="exportLog()" disabled>Export Log</button>
+<button onclick="toggleTheme()">Toggle Theme</button>
+
+<br><br>
+
+<b>Login Time:</b> <span id="login">--:--</span><br>
+<b>Logout Time:</b> <span id="logout">--:--</span>
+
+<br><br>
+
+<b>Time Left for Logout:</b>
+<div class="timer" id="remaining">--</div>
+
+<div class="progress">
+    <div class="bar" id="progressbar"></div>
+</div>
+
+</div>
+
+</body>
+</html>
+Designed for our team, so they don’t need to manually calculate the 9 hours 15 minutes (Added 1 min extra for buffer) required for logout. - Mukesh Kumar.
