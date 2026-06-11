@@ -6,11 +6,11 @@
 
 <style>
 body {
-    font-family: Segoe UI, Tahoma;
+    font-family: Segoe UI, Trebuchet MS;
     background: #0f172a;
     color: #e2e8f0;
-    padding: 10px;
     margin: 0;
+    padding: 10px;
 }
 
 .box {
@@ -22,54 +22,37 @@ body {
 }
 
 .title {
+    text-align: center;
     font-size: 20px;
-    font-weight: bold;
-    text-align: center;
     color: #60a5fa;
+    font-weight: bold;
 }
 
-#clock {
-    text-align: center;
-    font-size: 16px;
-    margin: 10px 0;
-}
+#clock { text-align:center; margin:10px; }
 
-input {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
-    margin-top: 5px;
-    border-radius: 6px;
-    border: none;
-}
-
-button {
+input, button {
     width: 100%;
     padding: 12px;
-    margin-top: 8px;
     font-size: 16px;
+    margin-top: 6px;
     border-radius: 6px;
     border: none;
-    background: #3b82f6;
-    color: white;
 }
 
-button:disabled {
-    background: #64748b;
-}
+button { background: #3b82f6; color: white; }
+button:disabled { background: #64748b; }
 
 .timer {
-    font-size: 22px;
     text-align: center;
-    margin-top: 15px;
+    font-size: 24px;
+    margin-top: 10px;
 }
 
 .progress {
-    width: 100%;
     height: 25px;
     background: #334155;
+    margin-top: 10px;
     border-radius: 6px;
-    margin-top: 15px;
 }
 
 .bar {
@@ -79,156 +62,190 @@ button:disabled {
     border-radius: 6px;
 }
 
-body.light {
-    background: #f8fafc;
-    color: black;
+table {
+    width: 100%;
+    margin-top: 15px;
+    font-size: 12px;
+    border-collapse: collapse;
 }
 
-body.light .box {
-    background: white;
+th, td {
+    border-bottom: 1px solid #444;
+    padding: 6px;
+    text-align: center;
 }
+
+th { color: #60a5fa; }
+
+body.light { background: #f8fafc; color: black; }
+body.light .box { background:white; }
 </style>
 
 <script>
-let TargetHours = 9;
-let TargetMinutes = 16;
+let TargetHours = 9, TargetMinutes = 16;
 
 let startTime, targetTime;
 let timerID, clockID;
-let isPaused = false;
-let totalDuration = 0;
+let isPaused = false, totalDuration = 0;
 
-function pad2(v) {
-    return v.toString().padStart(2, "0");
+// ===== STORAGE =====
+function saveRecord(login, logout) {
+    let records = JSON.parse(localStorage.getItem("timerRecords") || "[]");
+
+    records.push({
+        date: new Date().toLocaleDateString(),
+        login,
+        logout
+    });
+
+    if (records.length > 7) records.shift();
+
+    localStorage.setItem("timerRecords", JSON.stringify(records));
+    loadRecords();
 }
 
+function loadRecords() {
+    let records = JSON.parse(localStorage.getItem("timerRecords") || "[]");
+    let table = document.getElementById("history");
+
+    table.innerHTML = "";
+
+    records.slice().reverse().forEach(r => {
+        table.innerHTML += `
+        <tr>
+            <td>${r.date}</td>
+            <td>${r.login}</td>
+            <td>${r.logout}</td>
+        </tr>`;
+    });
+}
+
+// ===== TIMER =====
 function startTimer() {
-    let t = document.getElementById("starttime").value;
+    let t = starttime.value;
 
     if (!t || !t.includes(":")) {
-        alert("Enter time in HH:MM format");
+        alert("Enter HH:MM format");
         return;
     }
 
-    let [h, m] = t.split(":").map(Number);
+    let [h,m] = t.split(":").map(Number);
 
     let now = new Date();
-    startTime = new Date(
-        now.getFullYear(),
-        now.getMonth(),
-        now.getDate(),
-        h, m, 0
-    );
+    startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), h, m);
 
-    if (startTime > now) {
-        startTime.setDate(startTime.getDate() - 1);
-    }
+    if (startTime > now) startTime.setDate(startTime.getDate()-1);
 
     targetTime = new Date(startTime);
-    targetTime.setHours(targetTime.getHours() + TargetHours);
-    targetTime.setMinutes(targetTime.getMinutes() + TargetMinutes);
+    targetTime.setHours(targetTime.getHours()+TargetHours);
+    targetTime.setMinutes(targetTime.getMinutes()+TargetMinutes);
 
-    document.getElementById("login").innerText = t;
-    document.getElementById("logout").innerText =
-        targetTime.toLocaleTimeString();
+    login.innerText = t;
+    logout.innerText = targetTime.toLocaleTimeString();
 
-    totalDuration = (targetTime - startTime) / 1000;
+    totalDuration = (targetTime - startTime)/1000;
 
     clearInterval(timerID);
-    timerID = setInterval(updateTimer, 1000);
+    timerID = setInterval(updateTimer,1000);
 
     clearInterval(clockID);
-    clockID = setInterval(updateClock, 1000);
+    clockID = setInterval(updateClock,1000);
 
     isPaused = false;
 
     btnStart.disabled = true;
     btnPause.disabled = false;
     btnResume.disabled = true;
-    btnExport.disabled = true;
 }
 
 function updateTimer() {
     if (isPaused) return;
 
-    let now = new Date();
-    let remaining = (targetTime - now) / 1000;
+    let remaining = (targetTime - new Date())/1000;
 
     if (remaining <= 0) {
-        document.getElementById("remaining").innerHTML =
-            "<span style='color:#f87171;'>COUNTDOWN COMPLETED</span>";
+        saveRecord(login.innerText, logout.innerText);
 
-        document.getElementById("progressbar").style.width = "100%";
+        remainingDiv.innerHTML = "<span style='color:red'>COMPLETED</span>";
+        progressbar.style.width = "100%";
 
         clearInterval(timerID);
 
-        alert("9 Hours 16 Minutes Completed");
-
+        alert("Shift Completed");
         speak("Countdown completed");
 
-        btnExport.disabled = false;
         btnStart.disabled = false;
         return;
     }
 
-    let h = Math.floor(remaining / 3600);
-    let m = Math.floor((remaining % 3600) / 60);
-    let s = Math.floor(remaining % 60);
+    let h = Math.floor(remaining/3600);
+    let m = Math.floor((remaining%3600)/60);
+    let s = Math.floor(remaining%60);
 
-    document.getElementById("remaining").innerText =
-        `${h} Hours ${pad2(m)} Minutes ${pad2(s)} Seconds`;
+    remainingDiv.innerText = `${h}h ${m}m ${s}s`;
 
-    let elapsed = totalDuration - remaining;
-    let percent = (elapsed / totalDuration) * 100;
-
-    document.getElementById("progressbar").style.width =
-        percent.toFixed(0) + "%";
+    let percent = ((totalDuration-remaining)/totalDuration)*100;
+    progressbar.style.width = percent + "%";
 }
 
+// ===== CLOCK =====
 function updateClock() {
-    document.getElementById("clock").innerText =
-        "Current Time: " + new Date().toLocaleTimeString();
+    clock.innerText = "Current Time: " + new Date().toLocaleTimeString();
 }
 
-function pauseTimer() {
+// ===== CONTROLS =====
+function pauseTimer(){
     isPaused = true;
     btnPause.disabled = true;
     btnResume.disabled = false;
 }
 
-function resumeTimer() {
+function resumeTimer(){
     isPaused = false;
     btnPause.disabled = false;
     btnResume.disabled = true;
 }
 
-function fillCurrentTime() {
-    let now = new Date();
-    document.getElementById("starttime").value =
-        pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+function resetTimer(){
+    clearInterval(timerID);
+
+    isPaused = false;
+
+    starttime.value = "";
+    login.innerText = "--";
+    logout.innerText = "--";
+    remainingDiv.innerText = "--";
+    progressbar.style.width = "0%";
+
+    btnStart.disabled = false;
+    btnPause.disabled = true;
+    btnResume.disabled = true;
+
+    alert("Timer reset. Start fresh.");
 }
 
-function toggleTheme() {
+function fillCurrentTime(){
+    let d=new Date();
+    starttime.value =
+        d.getHours().toString().padStart(2,'0')+":"+
+        d.getMinutes().toString().padStart(2,'0');
+}
+
+function toggleTheme(){
     document.body.classList.toggle("light");
 }
 
-function speak(text) {
-    let msg = new SpeechSynthesisUtterance(text);
-    speechSynthesis.speak(msg);
+// ===== VOICE =====
+function speak(text){
+    speechSynthesis.speak(new SpeechSynthesisUtterance(text));
 }
 
-function exportLog() {
-    let log =
-        "Login Time: " + document.getElementById("login").innerText + "\n" +
-        "Logout Time: " + document.getElementById("logout").innerText + "\n" +
-        "Exported At: " + new Date();
-
-    let blob = new Blob([log], { type: "text/plain" });
-    let a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "Mukesh_Timer_Log.txt";
-    a.click();
-}
+// ===== INIT =====
+window.onload = function(){
+    updateClock();
+    clockID = setInterval(updateClock,1000);
+    loadRecords();
+};
 </script>
 
 </head>
@@ -239,34 +256,38 @@ function exportLog() {
 
 <div class="title">⭐ 9H 16Min Countdown Timer V.30 - Mukesh Kumar || ADSL ⭐</div>
 
-<div id="clock">Current Time: --</div>
+<div id="clock"></div>
 
-<b>Enter Start Time (HH:MM):</b>
-<input type="text" id="starttime">
+<b>Enter Start Time (HH:MM)</b>
+<input id="starttime" placeholder="Enter time HH:MM" >
 
 <button onclick="fillCurrentTime()">Fill Current Time</button>
 
 <button id="btnStart" onclick="startTimer()">Start</button>
 <button id="btnPause" onclick="pauseTimer()" disabled>Pause</button>
 <button id="btnResume" onclick="resumeTimer()" disabled>Resume</button>
-<button id="btnExport" onclick="exportLog()" disabled>Export Log</button>
-
+<button onclick="resetTimer()">🔄 Reset</button>
 <button onclick="toggleTheme()">Toggle Theme</button>
 
 <br><br>
 
-<b>Login Time:</b> <span id="login">--:--</span><br>
-<b>Logout Time:</b> <span id="logout">--:--</span>
+<b>Login:</b> <span id="login">--</span><br>
+<b>Logout:</b> <span id="logout">--</span>
 
-<br><br>
-
-<b>Time Left for Logout:</b>
-<div class="timer" id="remaining">--</div>
+<div class="timer" id="remainingDiv">--</div>
 
 <div class="progress">
-    <div class="bar" id="progressbar"></div>
+<div class="bar" id="progressbar"></div>
 </div>
 
+<h3>Last 7 Days Record</h3>
+
+<table>
+<tr><th>Date</th><th>Login</th><th>Logout</th></tr>
+<tbody id="history"></tbody>
+</table>
+
+</div>
 <br>
 
 <div style="font-size:12px; text-align:center;">
