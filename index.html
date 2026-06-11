@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>⭐ 9H 16Min Countdown Timer V.30 - Mukesh Kumar || ADSL ⭐</title>
 
 <style>
@@ -8,48 +9,83 @@ body {
     font-family: Segoe UI, Tahoma;
     background: #0f172a;
     color: #e2e8f0;
-    padding: 20px;
+    padding: 10px;
+    margin: 0;
 }
-body.light { background: #f8fafc; color: #000; }
 
 .box {
+    max-width: 500px;
+    margin: auto;
     background: #1e293b;
-    padding: 20px;
+    padding: 15px;
     border-radius: 12px;
 }
-body.light .box { background: white; }
 
 .title {
-    font-size: 28px;
+    font-size: 20px;
     font-weight: bold;
+    text-align: center;
     color: #60a5fa;
-}
-body.light .title { color: #003366; }
-
-.timer {
-    font-size: 28px;
-    font-weight: bold;
-    margin-top: 10px;
 }
 
 #clock {
+    text-align: center;
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    margin-top: 5px;
+    border-radius: 6px;
+    border: none;
+}
+
+button {
+    width: 100%;
+    padding: 12px;
+    margin-top: 8px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: none;
+    background: #3b82f6;
+    color: white;
+}
+
+button:disabled {
+    background: #64748b;
+}
+
+.timer {
     font-size: 22px;
-    margin-bottom: 10px;
-    color: #93c5fd;
+    text-align: center;
+    margin-top: 15px;
 }
 
 .progress {
     width: 100%;
-    height: 20px;
+    height: 25px;
     background: #334155;
-    border-radius: 5px;
+    border-radius: 6px;
     margin-top: 15px;
 }
+
 .bar {
     height: 100%;
     width: 0%;
     background: #22c55e;
-    border-radius: 5px;
+    border-radius: 6px;
+}
+
+body.light {
+    background: #f8fafc;
+    color: black;
+}
+
+body.light .box {
+    background: white;
 }
 </style>
 
@@ -70,7 +106,7 @@ function startTimer() {
     let t = document.getElementById("starttime").value;
 
     if (!t || !t.includes(":")) {
-        alert("Enter time in HH:MM");
+        alert("Enter time in HH:MM format");
         return;
     }
 
@@ -125,6 +161,7 @@ function updateTimer() {
         document.getElementById("progressbar").style.width = "100%";
 
         clearInterval(timerID);
+
         alert("9 Hours 16 Minutes Completed");
 
         speak("Countdown completed");
@@ -199,20 +236,21 @@ function exportLog() {
 <body>
 
 <div class="box">
-<div class="title">⭐ 9H 16Min Countdown Timer V.30 - Mukesh Kumar || ADSL ⭐</div><br>
+
+<div class="title">⭐ 9H 16Min Countdown Timer V.30 - Mukesh Kumar || ADSL ⭐</div>
 
 <div id="clock">Current Time: --</div>
 
-<b>Enter Login Time (HH:MM):</b>
+<b>Enter Start Time (HH:MM):</b>
 <input type="text" id="starttime">
-<button onclick="fillCurrentTime()">Fill Current Time</button>
 
-<br><br>
+<button onclick="fillCurrentTime()">Fill Current Time</button>
 
 <button id="btnStart" onclick="startTimer()">Start</button>
 <button id="btnPause" onclick="pauseTimer()" disabled>Pause</button>
 <button id="btnResume" onclick="resumeTimer()" disabled>Resume</button>
 <button id="btnExport" onclick="exportLog()" disabled>Export Log</button>
+
 <button onclick="toggleTheme()">Toggle Theme</button>
 
 <br><br>
@@ -229,8 +267,13 @@ function exportLog() {
     <div class="bar" id="progressbar"></div>
 </div>
 
+<br>
+
+<div style="font-size:12px; text-align:center;">
+Designed for our team, so they don’t need to manually calculate the 9 hours 15 minutes (Added 1 min extra for buffer) required for logout. - Mukesh Kumar.
+</div>
+
 </div>
 
 </body>
 </html>
-Designed for our team, so they don’t need to manually calculate the 9 hours 15 minutes (Added 1 min extra for buffer) required for logout. - Mukesh Kumar.
